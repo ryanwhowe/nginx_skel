@@ -1,0 +1,1 @@
+var REDMINE_URL = 'URL String to Redmine instance';

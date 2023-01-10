@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Weekly Summary</title>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/ui/widget.js" integrity="sha256-U6w7Wd4z8dMGmbhpiSBSc4iaqBPchfo5djk0EV1yaA0=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="js/timecard.js"></script>
+    <script type="text/javascript" src="js/environment.js"></script>
+
+</head>
+<body class='container-fluid'>
+    <div class="display-4">
+        <p class="text-center user-select-none">Weekly Summary</p>
+    </div>
+    <div class="row m-2 text-center">
+        <div class="col">
+            <button class="btn btn-outline-primary btn-sm" onclick="move(-7);">Previous Week</button>
+            <button class="btn btn-outline-primary btn-sm" onclick="reset();">Today</button>
+            <button class="btn btn-outline-primary btn-sm" onclick="move(7);">Next Week</button>
+        </div>
+    </div>
+    <div class="row m-2 text-center">
+        <div class="col">
+            <a class="btn btn-warning" href="tasks.html" target="_blank">My Tasks</a>
+            <a class="btn btn-secondary" href="codereview.html" target="_blank" id="tasksMonitor">Code Review</a>
+        </div>
+    </div>
+    <div class="row row-cols-1 row-cols-lg-3 row-cols-md-2 g-4 mt-1 mb-1" id="cards">
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header">Summary</div>
+                <div class="card-body">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr><th>Day</th><th>Total</th></tr>
+                        </thead>
+                        <tbody id="summary">
+                            <tr><td>Monday</td><td id="Monday_total">-.-</td></tr>
+                            <tr><td>Tuesday</td><td id="Tuesday_total">-.-</td></tr>
+                            <tr><td>Wednesday</td><td id="Wednesday_total">-.-</td></tr>
+                            <tr><td>Thursday</td><td id="Thursday_total">-.-</td></tr>
+                            <tr><td>Friday</td><td id="Friday_total">-.-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+	<script>
+
+        let the_day = new Date();
+
+        $(document).ready(function(){    
+
+            let days = getDays(the_day);
+
+            $.each(days, function(day, date){
+                $('<div>')
+                    .attr('id', day + '_card')
+                    .appendTo('#cards')
+                    .timecard({
+                        url: REDMINE_URL,
+                        date: date.toISOString().slice(0,10), 
+                        user_id: 44
+                    })
+                    .bind("timecardchange", function(event, data){
+                    if(typeof data !== 'object'){
+                        $('#' + day + '_total').text(data.toFixed(1));
+                    } else {
+                        $('#' + day + '_total').text('-.-');
+                    }
+                });
+            });
+
+            monitorTasksUpdate();
+        });
+
+        function getDays(theDate) {
+            return {
+                Monday:    new Date(theDate.setDate(theDate.getDate() - theDate.getDay() + 1)), 
+                Tuesday:   new Date(theDate.setDate(theDate.getDate() - theDate.getDay() + 2)), 
+                Wednesday: new Date(theDate.setDate(theDate.getDate() - theDate.getDay() + 3)), 
+                Thursday:  new Date(theDate.setDate(theDate.getDate() - theDate.getDay() + 4)), 
+                Friday:    new Date(theDate.setDate(theDate.getDate() - theDate.getDay() + 5))
+            };
+        }
+
+        function move(amount) {
+            the_day.setDate(the_day.getDate() + amount);
+            let days = getDays(the_day);
+            $.each(days, function(day, date){
+                $('#' + day + '_card').timecard('updateDate', date.toISOString().slice(0,10));
+            });
+
+        }
+
+        function reset() {
+            the_day = new Date();
+            let days = getDays(the_day);
+            $.each(days, function(day, date){
+                $('#' + day + '_card').timecard('updateDate', date.toISOString().slice(0,10));
+            });
+
+        }
+
+        function monitorTasksUpdate() {
+            $.ajax({
+                url: REDMINE_URL + '/redmine/issues.json',
+                dataType: 'jsonp',
+                data: {
+                    status_id: 'open',
+                    limit: 100
+                },
+                success: function(data){
+                    let new_count = cr_count = r_count = 0;
+
+                    $.each(data['issues'], function(i, issue){
+                        if(issue['status']['name'] === 'New'){
+                            new_count += 1;
+                            return true;
+                        }
+                        if(issue['status']['name'] === 'Code Review'){
+                            cr_count += 1;
+                            return true;
+                        }
+                        if(issue['status']['name'] === 'Release Hold'){
+                            r_count += 1;
+                            return true;
+                        }
+                    });
+                    let count = '(' + new_count +',' + cr_count + ',' + r_count + ')'
+                    $("#tasksMonitor").text('Code Review ' + count);
+                    $(document).find('title').text(count);
+                    setTimeout(monitorTasksUpdate, 60 * 1000);
+                }
+            });
+        }
+
+	</script>
+</body>
+</html>

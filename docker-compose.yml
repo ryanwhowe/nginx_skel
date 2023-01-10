@@ -8,4 +8,4 @@ services:
       - ./config:/etc/nginx/conf.d/
       - ./web:/var/www/
     ports:
-      - 80:80
+      - 8001:80
