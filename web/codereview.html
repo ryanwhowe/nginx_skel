@@ -77,7 +77,9 @@
             }).done(function(data){
                 let issue_table = $('#issues').DataTable();
                 issue_table.clear();
+                let count = 0;
                 $.each(data['issues'], function(i, issue){
+                    count = count + 1;
                     fetchTime(issue['id']).then(function(time_entries){
                         let time = 0.0;
                         $.each(time_entries['time_entries'], function(i, time_entry){
@@ -111,7 +113,11 @@
                         issue_table.columns.adjust().draw();
                     });
                 });
+                count = '(' + count + ')';
+                $(document).find('title').text( 'Code Review Queue ' + count);
+                setTimeout(pullIssues, 60 * 1000);
             });
+            
         }
 
         async function fetchTime(id){

@@ -137,7 +137,7 @@
                             return true;
                         }
                     });
-                    let count = '(' + new_count +',' + cr_count + ',' + r_count + ')'
+                    let count = '(' + cr_count + ',' + r_count + ')'
                     $("#tasksMonitor").text('Code Review ' + count);
                     $(document).find('title').text(count);
                     setTimeout(monitorTasksUpdate, 60 * 1000);
