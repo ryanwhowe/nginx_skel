@@ -1,12 +1,11 @@
 $(function(){
-    $.widget("rhowe.timeline", {
+    $.widget("redmine.timeline", {
         options: {
             day_of_week: null
         },
 
         __create: function() {
-            let me = this,
-            e = this.element;
+            let me = this;
             let default_time = '0.0';
 
             if(me.__validate()){
@@ -33,6 +32,7 @@ $(function(){
             if(o.day_of_week < 0 || o.day_of_week > 6){
                 me.__Error('Initialized with an invalid day of week ' + o.day_of_week + ', only 0-6 are valid');
             }
+            return true;
         },
 
         /**

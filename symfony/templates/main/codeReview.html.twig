@@ -1,0 +1,139 @@
+{% extends 'base.html.twig' %}
+
+{% block head %}
+    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_favicon') }}?bg=1c2045" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.css" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css" crossorigin="anonymous"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js" crossorigin="anonymous"></script>{% endblock %}
+
+{% block title %}Code Review Queue{% endblock %}
+{% block body %}
+    <div class="display-4">
+        <p class="text-center user-select-none">Code Review Queue</p>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table id="issues" class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>Issue</th>
+                    <th>Project</th>
+                    <th>Assigned To</th>
+                    <th>Code Reviewer</th>
+                    <th>Title</th>
+                    <th>Time</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="6">Redmine&COPY;</td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="container-fluid">
+                <pre id="data" class="mt-1 mb-1 p-2 bg-dark text-info" style="display: none;"></pre>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascript %}
+<script>
+
+    let REDMINE_API_URL = '{{ redmine_proxy_url }}';
+    let REDMINE_URL = '{{ redmine_url }}';
+    let REDMINE_USER_ID = {{ redmine_user_id }};
+    let REDMINE_CR_USER_NAME = '{{ redmine_cr_user_name }}';
+
+    $(document).ready(function(){
+
+    $('#issues').DataTable({
+        order: [1, 'asc'],
+        paging: false,
+        autoWidth: true
+    });
+
+    pullIssues();
+});
+
+    function pullIssues(){
+    $.ajax({
+        cache: false,
+        async: true,
+        method: "GET",
+        url: REDMINE_API_URL + "/issues.json",
+        data: { 'status_id': "9" },
+        crossDomain: true,
+        dataType: 'json',
+    }).done(function(data){
+        let issue_table = $('#issues').DataTable();
+        issue_table.clear();
+        let count = 0;
+        $.each(data['issues'], function(i, issue){
+            count = count + 1;
+            fetchTime(issue['id']).then(function(time_entries){
+                let time = 0.0;
+                $.each(time_entries['time_entries'], function(i, time_entry){
+                    time += time_entry['hours'];
+                });
+
+                const custom = issue['custom_fields'];
+                let codereviewer = '?'
+                for (var i = 0; i < custom.length; i++){
+                    if(custom[i]['id'] === 3) codereviewer = custom[i]['value'];
+                }
+
+                let custom_row_class = '';
+                if(codereviewer === REDMINE_CR_USER_NAME){
+                    custom_row_class = 'table-info';
+                } else if(codereviewer === ''){
+                    codereviewer = '?';
+                    custom_row_class = 'table-warning';
+                }
+
+                issue_table.row.add($([
+                    '<tr class="' + custom_row_class + '">',
+                    '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a></td>',
+                    '<td>' + issue['project']['name'] + '</td>',
+                    '<td>' + issue['assigned_to']['name'] + '</td>',
+                    '<td>' + codereviewer + '</td>',
+                    '<td>' + issue['subject'] + '</td>',
+                    '<td class="text-center">' + time.toFixed(1) + '</td>',
+                    '</tr>',
+                ].join('\r\n')));
+                issue_table.columns.adjust().draw();
+            });
+        });
+        let counter = count;
+        count = '(' + count + ')';
+        $(document).find('title').text( 'Code Review Queue ' + count);
+        $('#favicon').attr('href', '{{ path('app_favicon') }}?bg=1c2045&number[]=' + counter);
+        setTimeout(pullIssues, 60 * 1000);
+    });
+
+}
+
+    async function fetchTime(id){
+
+    return await $.ajax({
+    cache: false,
+    async: false,
+    method: "GET",
+    url: REDMINE_API_URL + "/time_entries.json",
+    data: {
+    issue_id: id
+},
+    crossDomain: true,
+    dataType: 'json',
+});
+}
+
+</script>
+{% endblock %}

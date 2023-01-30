@@ -4,6 +4,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.redmine_url: '%env(REDMINE_URL)%'
+    app.redmine_user_id: '%env(REDMINE_USER_ID)%'
+    app.redmine_api_token: '%env(REDMINE_API_TOKEN)%'
+    app.redmine_cr_user_name: '%env(REDMINE_USER_NAME)%'
 
 services:
     # default configuration for services in *this* file

@@ -1,7 +1,8 @@
 $(function(){
-    $.widget("rhowe.timecard", {
+    $.widget("redmine.timecard", {
 
         options: {
+            api_url: null,
             url: null,
             user_id: null,
             date: null
@@ -38,7 +39,7 @@ $(function(){
         __updateData: function() {
             let me = this;
             $.ajax({
-                url: me.options.url + '/redmine/time_entries.json',
+                url: me.options.api_url + '/time_entries.json',
                 data: {
                     user_id: me.options.user_id,
                     from: me.options.date,
@@ -47,7 +48,7 @@ $(function(){
                 },
                 method: 'GET',
                 async: true,
-                dataType: 'jsonp',
+                dataType: 'json',
                 cache: false,
                 success: function(data) {
                     me.data_response = data;
@@ -96,7 +97,7 @@ $(function(){
 
             // Create the time table
             $.each(data['time_entries'], function(i, time_entry) {
-                table = table + '<tr><td><a href="' + me.options.url +'/redmine/issues/' +  time_entry['issue']['id'] + '" target="_blank">' + time_entry['project']['name'] + '</a></td><td>' + time_entry['activity']['name'] + '</td><td>' + time_entry['hours'] + '</td></tr>' + '\r\n';
+                table = table + '<tr><td><a href="' + me.options.url +'issues/' +  time_entry['issue']['id'] + '" target="_blank">' + time_entry['project']['name'] + '</a></td><td>' + time_entry['activity']['name'] + '</td><td>' + time_entry['hours'] + '</td></tr>' + '\r\n';
                 total_time += time_entry['hours'];
             });
             let total_time_display = (total_time.toFixed(1) === '0.0') ? 'N/A' : total_time.toFixed(1);
@@ -138,7 +139,7 @@ $(function(){
 
         /**
          * validate the Widget Options
-         * @returns {bool}
+         * @returns {boolean}
          */
         __validate: function() {
             let me = this,
