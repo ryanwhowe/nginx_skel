@@ -22,6 +22,14 @@ $(function(){
         },
 
         /**
+         * Update the information in the widget
+         */
+        updateData: function() {
+            this.data_response = null;
+            this.__updateData();
+        },
+
+        /**
          * constructor for the widget
          */
         _create: function() {

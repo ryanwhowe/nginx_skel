@@ -5,17 +5,97 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{% block title %}{% endblock %}</title>
+    <title>{{ block('title') }}</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/ui/widget.js" integrity="sha256-U6w7Wd4z8dMGmbhpiSBSc4iaqBPchfo5djk0EV1yaA0=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    {% block head %}{% endblock %}
+    {{ block('head') }}
 </head>
 <body class='container-fluid'>
-{% block body %}{% endblock %}
-{% block javascript %}{% endblock %}
+<div class="container-fluid">
+    <div class="display-4">
+        <p class="text-center user-select-none">{{ block('title') }}</p>
+    </div>
+    <div class="row m-2 text-center">
+        <div class="col">{% set currentPath = path(app.request.attributes.get('_route')) %}
+            <a class="btn btn-primary{% if path('app_main_index') == currentPath %} disabled{% endif %}" href="{{ path('app_main_index') }}">Time</a>
+            <a class="btn btn-secondary{% if path('app_main_tasks') == currentPath %} disabled{% endif %}" href="{{ path('app_main_tasks') }}" id="taskMonitor">Open Tasks</a>
+            <a class="btn btn-secondary{% if path('app_main_new') == currentPath %} disabled{% endif %}" href="{{ path('app_main_new') }}" id="newMonitor">New Issues</a>
+            <a class="btn btn-secondary{% if path('app_main_codeReview') == currentPath %} disabled{% endif %}" href="{{ path('app_main_codeReview') }}" id="tasksMonitor">Code Review</a>
+        </div>
+    </div>
+{{ block('body') }}
+</div>
 </body>
+<script type="text/javascript">
+
+    var REDMINE_API_URL = '{{ redmine_proxy_url }}';
+    var REDMINE_CR_USER_NAME = '{{ redmine_cr_user_name }}';
+
+    var new_count = 0;
+    var open_count = 0;
+    var cr_count = 0;
+    var r_count = 0;
+
+    $(document).ready(function(){
+        monitorTasksUpdate();
+    });
+
+    function updateTitle(count){
+        let baseTitle = '{{ block('title') }}';
+        count = '(' + count + ')';
+        $(document).find('title').text( baseTitle + ' ' + count);
+    }
+
+    function monitorTasksUpdate() {
+        $.ajax({
+            url: REDMINE_API_URL + '/issues.json',
+            dataType: 'json',
+            data: {
+                status_id: 'open',
+                limit: 100
+            },
+            success: function (data) {
+                new_count = 0;
+                open_count = 0;
+                cr_count = 0;
+                r_count = 0;
+
+                $.each(data['issues'], function (i, issue) {
+                    if (issue['status']['name'] === 'New') {
+                        new_count += 1;
+                        return true;
+                    }
+                    if (issue['status']['id'] === 2) {
+                        open_count += 1;
+                        return true;
+                    }
+                    if (issue['status']['name'] === 'Code Review') {
+                        let cr = '?';
+                        const custom = issue['custom_fields'];
+                        for (let ii = 0; ii < custom.length; ii++){
+                            if(custom[ii]['id'] === 3) cr = custom[ii]['value'];
+                        }
+                        if(REDMINE_CR_USER_NAME === cr || '' === cr){
+                            cr_count += 1;
+                        }
+                        return true;
+                    }
+                    if (issue['status']['name'] === 'Release Hold') {
+                        r_count += 1;
+                        return true;
+                    }
+                });
+                $("#tasksMonitor").text('Code Review (' + cr_count + ')');
+                $("#newMonitor").text('New Issues (' + new_count + ')')
+                $("#taskMonitor").text('Open Tasks (' + open_count + ')');
+                setTimeout(monitorTasksUpdate, 90 * 1000);
+            }
+        });
+    }
+    {{ block('javascript') }}
+</script>
 </html>

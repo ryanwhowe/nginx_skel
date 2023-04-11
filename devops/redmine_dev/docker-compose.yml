@@ -4,7 +4,7 @@ services:
   php:
     build:
       context: ../images
-      dockerfile: php.Dockerfile
+      dockerfile: redmine_php.Dockerfile
 
   nginx:
     build:
