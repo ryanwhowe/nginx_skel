@@ -1,25 +1,16 @@
 {% extends 'base.html.twig' %}
 
 {% block head %}
-    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_favicon') }}?bg=193d17" />
+    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg=193d17" />
     <script src="{{ asset('js/timecard.js') }}"></script>{% endblock %}
 
 {% block title %}Weekly Summary{% endblock %}
 {% block body %}
-    <div class="display-4">
-        <p class="text-center user-select-none">Weekly Summary</p>
-    </div>
     <div class="row m-2 text-center">
         <div class="col">
             <button class="btn btn-outline-primary btn-sm" onclick="move(-7);">Previous Week</button>
             <button class="btn btn-outline-primary btn-sm" onclick="reset();">Today</button>
             <button class="btn btn-outline-primary btn-sm" onclick="move(7);">Next Week</button>
-        </div>
-    </div>
-    <div class="row m-2 text-center">
-        <div class="col">
-            <a class="btn btn-warning disabled" href="tasks.html" target="_blank">My Tasks</a>
-            <a class="btn btn-secondary" href="{{ path('app_view_cr') }}" target="_blank" id="tasksMonitor">Code Review</a>
         </div>
     </div>
     <div class="row row-cols-1 row-cols-lg-3 row-cols-md-2 g-4 mt-1 mb-1" id="cards">
@@ -64,10 +55,8 @@
 {% endblock %}
 
 {% block javascript %}
-<script type="text/javascript">
     let the_day = new Date();
 
-    let REDMINE_API_URL = '{{ redmine_proxy_url }}';
     let REDMINE_URL = '{{ redmine_url }}';
     let REDMINE_USER_ID = {{ redmine_user_id }};
 
@@ -76,15 +65,12 @@
         let days = getDays(the_day);
 
         $.each(days, function(day, date){
-        $('<div>')
-        .attr('id', day + '_card')
-        .appendTo('#cards')
-        .timecard({
-        api_url: REDMINE_API_URL,
-        url: REDMINE_URL,
-        date: date.toISOString().slice(0,10),
-        user_id: REDMINE_USER_ID
-    })
+        $('<div>').attr('id', day + '_card').appendTo('#cards').timecard({
+            api_url: REDMINE_API_URL,
+            url: REDMINE_URL,
+            date: date.toISOString().slice(0,10),
+            user_id: REDMINE_USER_ID
+        })
         .bind("timecardchange", function(event, data){
         if(typeof data !== 'object'){
         $('#' + day + '_total').text(data.toFixed(1));
@@ -93,9 +79,13 @@
     }
     });
     });
-
-        monitorTasksUpdate();
+        setInterval(updateCards, 2 * 60 * 1000);
+        setInterval(updateIcon, 1000);
     });
+
+    function updateIcon() {
+        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg=193d17&number[]=' + new_count + '&number[]=' + cr_count + '&number[]=' + r_count);
+    }
 
     function getDays(theDate) {
         return {
@@ -111,10 +101,14 @@
         the_day.setDate(the_day.getDate() + amount);
         let days = getDays(the_day);
         $.each(days, function(day, date){
-        $('#' + day + '_card').timecard('updateDate', date.toISOString().slice(0,10));
-    });
+            $('#' + day + '_card').timecard('updateDate', date.toISOString().slice(0,10));
+        });
+    }
 
-}
+    function updateCards() {
+        let days = getDays(the_day);
+        $.each(days, function(day) { $('#' + day + '_card').timecard('updateData'); });
+    }
 
     function reset() {
         the_day = new Date();
@@ -123,40 +117,4 @@
             $('#' + day + '_card').timecard('updateDate', date.toISOString().slice(0,10));
         });
     }
-
-    function monitorTasksUpdate() {
-        $.ajax({
-            url: REDMINE_API_URL + '/issues.json',
-            dataType: 'json',
-            data: {
-                status_id: 'open',
-                limit: 100
-            },
-            success: function (data) {
-                let new_count = cr_count = r_count = 0;
-
-                $.each(data['issues'], function (i, issue) {
-                    if (issue['status']['name'] === 'New') {
-                        new_count += 1;
-                        return true;
-                    }
-                    if (issue['status']['name'] === 'Code Review') {
-                        cr_count += 1;
-                        return true;
-                    }
-                    if (issue['status']['name'] === 'Release Hold') {
-                        r_count += 1;
-                        return true;
-                    }
-                });
-                let count = '(' + cr_count + ')'
-                $("#tasksMonitor").text('Code Review ' + count);
-                $(document).find('title').text(count);
-                $('#favicon').attr('href', '{{ path('app_favicon') }}?bg=193d17&number[]=' + new_count + '&number[]=' + cr_count + '&number[]='+ r_count);
-                setTimeout(monitorTasksUpdate, 60 * 1000);
-            }
-        });
-    }
-
-</script>
 {% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html.twig' %}
+
+{% block head %}
+    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg=868a24&fg=000000"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.css" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css" crossorigin="anonymous"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js" crossorigin="anonymous"></script>{% endblock %}
+
+{% block title %}Open Tasks{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <table id="issues" class="table table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        <th>epoch</th>
+                        <th>Entered</th>
+                        <th>Assigned To</th>
+                        <th>Ticket</th>
+                        <th>Priority</th>
+                        <th>Project</th>
+                        <th>Title</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="7">Redmine&COPY;</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+
+    let REDMINE_URL = '{{ redmine_url }}';
+
+    $(document).ready(function() {
+
+        $('#issues').DataTable({
+            order: [[2, 'asc'], [0, 'desc']],
+            paging: false,
+            autoWidth: true,
+            columnDefs: [
+                {
+                    targets: 0,
+                    visible: false,
+                    orderData: [0,2]
+                },
+                {
+                    targets: 2,
+                    orderData: [2,0]
+                },
+                {
+                    targets: [0,1,3,4,5],
+                    searchable: false
+                }
+            ],
+        });
+
+        pullIssues();
+    });
+
+    function pullIssues(){
+    $.ajax({
+        cache: false,
+        async: true,
+        method: "GET",
+        url: REDMINE_API_URL + "/issues.json",
+        data: { 'status_id': 2, 'limit': 100 },
+        crossDomain: true,
+        dataType: 'json',
+    }).done(function(data){
+        let issue_table = $('#issues').DataTable();
+        issue_table.clear();
+        let count = 0;
+        $.each(data['issues'], function(i, issue){
+            count = count + 1;
+            let createdDate = new Date(issue['created_on']);
+            let assigned = '';
+            try { assigned = issue['assigned_to']['name'].split(' ')[0]; }
+            catch (err) { assigned = 'N/A'; }
+            issue_table.row.add($([
+                '<tr>',
+                '<td>' + createdDate.getTime() + '</td>',
+                '<td>' + formatDate(createdDate)  + '</td>',
+                '<td>' + assigned + '</td>',
+                '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a></td>',
+                '<td>' + issue['priority']['name'] + '</td>',
+                '<td>' + issue['project']['name'] + '</td>',
+                '<td>' + issue['subject'] + '</td>',
+                '</tr>',
+            ].join('\r\n')));
+            issue_table.columns.adjust().draw();
+        });
+        updateTitle(count);
+        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg=868a24&fg=000000&max=99&number[]=' + count);
+        setTimeout(pullIssues, 90 * 1000);
+    });
+
+}
+
+    function formatDate(dateObject){
+        let time = dateObject.toLocaleTimeString().split(' ')[0];
+        let ampm = dateObject.toLocaleTimeString().split(' ')[1];
+        time = time.split(':');
+        let date = dateObject.toLocaleDateString().split('/');
+        return date[0].padStart(2,'0') + '/' + date[1].padStart(2,'0') + ' ' + time[0].padStart(2,'0') + ':' + time[1] + ampm;
+    }
+
+{% endblock %}
