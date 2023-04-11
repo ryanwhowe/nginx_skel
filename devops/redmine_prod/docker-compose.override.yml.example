@@ -5,7 +5,7 @@ services:
     volumes:
       - <path to solution>/symfony:/var/www/symfony/
     environment:
-      APP_ENV: dev
+      APP_ENV: prod
 
   nginx:
     volumes:
