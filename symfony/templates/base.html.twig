@@ -15,7 +15,6 @@
     {{ block('head') }}
 </head>
 <body class='container-fluid'>
-<div class="container-fluid">
     <div class="display-4">
         <p class="text-center user-select-none">{{ block('title') }}</p>
     </div>
@@ -28,12 +27,12 @@
         </div>
     </div>
 {{ block('body') }}
-</div>
 </body>
 <script type="text/javascript">
 
     var REDMINE_API_URL = '{{ redmine_proxy_url }}';
     var REDMINE_CR_USER_NAME = '{{ redmine_cr_user_name }}';
+    var REDMINE_CR_USER_ID = {{ redmine_user_id }};
 
     var new_count = 0;
     var open_count = 0;
@@ -79,7 +78,7 @@
                         for (let ii = 0; ii < custom.length; ii++){
                             if(custom[ii]['id'] === 3) cr = custom[ii]['value'];
                         }
-                        if(REDMINE_CR_USER_NAME === cr || '' === cr){
+                        if(REDMINE_CR_USER_NAME === cr || ('' === cr && issue['assigned_to']['id'] !== REDMINE_CR_USER_ID)){
                             cr_count += 1;
                         }
                         return true;

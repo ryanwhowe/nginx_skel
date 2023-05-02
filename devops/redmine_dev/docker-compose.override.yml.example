@@ -7,6 +7,10 @@ services:
     environment:
       APP_ENV: dev
       XDEBUG_CONFIG: remote_host=host.docker.internal remote_port=9003 remote_connect_back=0
+      REDMINE_URL:
+      REDMINE_API_TOKEN:
+      REDMINE_USER_ID:
+      REDMINE_USER_NAME:
 
   nginx:
     volumes:

@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
-
+{% set icon_color = '520202' %}
 {% block head %}
-    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg=868a24&fg=000000"/>
+    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg={{ icon_color }}&fg=000000"/>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.css" crossorigin="anonymous"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css" crossorigin="anonymous"/>
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.js" crossorigin="anonymous"></script>
@@ -99,7 +99,7 @@
             issue_table.columns.adjust().draw();
         });
         updateTitle(count);
-        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg=868a24&fg=000000&max=99&number[]=' + count);
+        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&fg=000000&max=99&number[]=' + count);
         setTimeout(pullIssues, 90 * 1000);
     });
 

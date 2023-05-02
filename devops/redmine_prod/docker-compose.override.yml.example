@@ -6,6 +6,10 @@ services:
       - <path to solution>/symfony:/var/www/symfony/
     environment:
       APP_ENV: prod
+      REDMINE_URL:
+      REDMINE_API_TOKEN:
+      REDMINE_USER_ID:
+      REDMINE_USER_NAME:
 
   nginx:
     volumes:
