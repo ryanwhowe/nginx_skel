@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
-
+{% set icon_color = '193d17' %}
 {% block head %}
-    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg=193d17" />
+    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg={{ icon_color }}" />
     <script src="{{ asset('js/timecard.js') }}"></script>{% endblock %}
 
 {% block title %}Weekly Summary{% endblock %}
@@ -84,7 +84,7 @@
     });
 
     function updateIcon() {
-        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg=193d17&number[]=' + new_count + '&number[]=' + cr_count + '&number[]=' + r_count);
+        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&number[]=' + new_count + '&number[]=' + cr_count + '&number[]=' + r_count);
     }
 
     function getDays(theDate) {

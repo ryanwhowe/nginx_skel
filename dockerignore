@@ -1,0 +1,6 @@
+# Remove all the git
+.git/
+.github/
+
+symfony/var/
+symfony/vendor/

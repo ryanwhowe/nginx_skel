@@ -2,10 +2,12 @@ version: "3.7"
 
 services:
   php:
-    image: ryanwhowe/redmine_monitor:latest
+    image: redmine_monitor:latest
 
   nginx:
-    image: nginx:1.23
+    build:
+      context: ../images
+      dockerfile: nginx.Dockerfile
     depends_on:
       - php
     ports:
