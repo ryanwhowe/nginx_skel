@@ -7,7 +7,7 @@ api keys.
 
 ## Running the solution
 There is no public production image to use as part of this solution.  The container must be built locally before it 
-is ran.
+is run.
 
 ### Build Production Container
 

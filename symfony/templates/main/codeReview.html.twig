@@ -71,8 +71,10 @@
             console.log('issue loop: ' + ( i + 1 ) );
             const custom = issue['custom_fields'];
             let codereviewer = '?'
+            let feedback = '';
             for (let t = 0; t < custom.length; t++){
                 if(custom[t]['id'] === 3) codereviewer = custom[t]['value'];
+                if(custom[t]['id'] === 4 && custom[t]['value'] === "1") feedback = '*';
             }
             console.log('Code Reviewer: ' + codereviewer);
 
@@ -89,7 +91,7 @@
             count = count + 1;
             issue_table.row.add($([
                 '<tr class="' + custom_row_class + '">',
-                '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a></td>',
+                '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a>' + feedback + '</td>',
                 '<td>' + issue['project']['name'] + '</td>',
                 '<td>' + issue['assigned_to']['name'] + '</td>',
                 '<td>' + codereviewer + '</td>',
