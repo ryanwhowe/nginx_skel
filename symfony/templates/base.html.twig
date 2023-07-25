@@ -50,48 +50,83 @@
     }
 
     function monitorTasksUpdate() {
+        /** update code review */
         $.ajax({
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
             data: {
-                status_id: 'open',
+                status_id: '9',
+                limit: 100
+            },
+            success: function (data) {
+                cr_count = 0;
+
+                $.each(data['issues'], function (i, issue) {
+                    let cr = '?';
+                    const custom = issue['custom_fields'];
+                    for (let ii = 0; ii < custom.length; ii++){
+                        if(custom[ii]['id'] === 3) cr = custom[ii]['value'];
+                    }
+                    if(REDMINE_CR_USER_NAME === cr || ('' === cr && issue['assigned_to']['id'] !== REDMINE_CR_USER_ID)){
+                        cr_count += 1;
+                    }
+                    return true;
+                });
+                $("#tasksMonitor").text('Code Review (' + cr_count + ')');
+                setTimeout(monitorTasksUpdate, 90 * 1000);
+            }
+        });
+        /** update new task */
+        $.ajax({
+            url: REDMINE_API_URL + '/issues.json',
+            dataType: 'json',
+            data: {
+                status_id: '1',
                 limit: 100
             },
             success: function (data) {
                 new_count = 0;
+
+                $.each(data['issues'], function (i, issue) {
+                    new_count += 1;
+                    return true;
+                });
+                $("#newMonitor").text('New Issues (' + new_count + ')')
+            }
+        });
+        /** update open count */
+        $.ajax({
+            url: REDMINE_API_URL + '/issues.json',
+            dataType: 'json',
+            data: {
+                status_id: '2',
+                limit: 100
+            },
+            success: function (data) {
                 open_count = 0;
-                cr_count = 0;
+
+
+                $.each(data['issues'], function (i, issue) {
+                    open_count += 1;
+                    return true;
+                });
+                $("#taskMonitor").text('Open Tasks (' + open_count + ')');
+            }
+        });
+        $.ajax({
+            url: REDMINE_API_URL + '/issues.json',
+            dataType: 'json',
+            data: {
+                status_id: '13',
+                limit: 100
+            },
+            success: function (data) {
                 r_count = 0;
 
                 $.each(data['issues'], function (i, issue) {
-                    if (issue['status']['name'] === 'New') {
-                        new_count += 1;
-                        return true;
-                    }
-                    if (issue['status']['id'] === 2) {
-                        open_count += 1;
-                        return true;
-                    }
-                    if (issue['status']['name'] === 'Code Review') {
-                        let cr = '?';
-                        const custom = issue['custom_fields'];
-                        for (let ii = 0; ii < custom.length; ii++){
-                            if(custom[ii]['id'] === 3) cr = custom[ii]['value'];
-                        }
-                        if(REDMINE_CR_USER_NAME === cr || ('' === cr && issue['assigned_to']['id'] !== REDMINE_CR_USER_ID)){
-                            cr_count += 1;
-                        }
-                        return true;
-                    }
-                    if (issue['status']['name'] === 'Release Hold') {
-                        r_count += 1;
-                        return true;
-                    }
+                    r_count += 1;
+                    return true;
                 });
-                $("#tasksMonitor").text('Code Review (' + cr_count + ')');
-                $("#newMonitor").text('New Issues (' + new_count + ')')
-                $("#taskMonitor").text('Open Tasks (' + open_count + ')');
-                setTimeout(monitorTasksUpdate, 90 * 1000);
             }
         });
     }

@@ -76,7 +76,7 @@
                 if(custom[t]['id'] === 3) codereviewer = custom[t]['value'];
                 if(custom[t]['id'] === 4 && custom[t]['value'] === "1") feedback = '*';
             }
-            console.log('Code Reviewer: ' + codereviewer);
+            //console.log('Code Reviewer: ' + codereviewer);
 
             let custom_row_class = '';
             if(codereviewer === REDMINE_CR_USER_NAME){
@@ -96,7 +96,7 @@
                 '<td>' + issue['assigned_to']['name'] + '</td>',
                 '<td>' + codereviewer + '</td>',
                 '<td>' + issue['subject'] + '</td>',
-                '<td><a title="Code Review Complete" class="btn btn-primary btn-sm" target="_blank" href="' + '/api/codeReview/' + issue['id'] + '/0' + '"><i class="fa-solid fa-check-to-slot"></i></a> <a title="Pushed To Demo" class="btn btn-primary btn-sm" target="_blank" href="' + '/api/codeReview/' + issue['id'] + '/1' + '"><i class="fa-solid fa-arrow-up-from-bracket"></i></a></td>',
+                '<td class="text-center"><a title="Code Review Complete" class="btn btn-primary btn-sm" target="_blank" href="' + '/api/codeReview/' + issue['id'] + '/0' + '"><i class="fa-solid fa-check-to-slot"></i></a></td>',
                 '</tr>',
             ].join('\r\n')));
             issue_table.columns.adjust().draw();

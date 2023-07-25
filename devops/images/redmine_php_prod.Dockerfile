@@ -45,7 +45,8 @@ RUN chmod +x /tmp/scripts/*.sh
 COPY symfony /var/www/symfony
 
 WORKDIR /var/www/symfony/
+RUN rm -rf var/ vendor/
 
 RUN composer install
 
-RUN php ./bin/console cache:warm -e prod
+RUN php ./bin/console cache:clear -e prod && php ./bin/console cache:warm -e prod
