@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+{% set icon_color = '029196' %}
+{% block head %}
+    <link id="favicon" rel="shortcut icon" type="image/png" href="{{ path('app_utility_favicon') }}?bg={{ icon_color }}"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.css" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css" crossorigin="anonymous"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />{% endblock %}
+
+{% block title %}Release Hold Queue{% endblock %}
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <table id="issues" class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Project</th>
+                        <th>Assigned To</th>
+                        <th>Code Reviewer</th>
+                        <th>Title</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="6">Redmine&COPY;</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascript %}
+
+    let REDMINE_URL = '{{ redmine_url }}';
+    let REDMINE_USER_ID = {{ redmine_user_id }};
+
+    $(document).ready(function() {
+
+        $('#issues').DataTable({
+            order: [1, 'asc'],
+            paging: false,
+            autoWidth: true
+        });
+
+        pullIssues();
+    });
+
+    function pullIssues(){
+    $.ajax({
+        cache: false,
+        async: true,
+        method: "GET",
+        url: REDMINE_API_URL + "/issues.json",
+        data: { 'status_id': "13" },
+        crossDomain: true,
+        dataType: 'json',
+    }).done(function(data){
+        console.log('issue count: ' + data['issues'].length)
+        let issue_table = $('#issues').DataTable();
+        issue_table.clear();
+        let count = 0;
+        $.each(data['issues'], function(i, issue){
+
+            const custom = issue['custom_fields'];
+            let codereviewer = '?'
+            for (let t = 0; t < custom.length; t++){
+                if(custom[t]['id'] === 3) codereviewer = custom[t]['value'];
+            }
+
+            count = count + 1;
+            issue_table.row.add($([
+                '<tr>',
+                '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a></td>',
+                '<td>' + issue['project']['name'] + '</td>',
+                '<td>' + issue['assigned_to']['name'] + '</td>',
+                '<td>' + codereviewer + '</td>',
+                '<td>' + issue['subject'] + '</td>',
+                '<td class="text-center"><a title="Move To Closed" class="btn btn-primary btn-sm" target="_blank" href="' + '/api/release/' + issue['id'] + '"><i class="fa-solid fa-check-to-slot"></i></a></td>',
+                '</tr>',
+            ].join('\r\n')));
+            issue_table.columns.adjust().draw();
+        });
+        updateTitle(count);
+        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&number[]=' + count);
+        setTimeout(pullIssues, 90 * 1000);
+    });
+
+}
+{% endblock %}
