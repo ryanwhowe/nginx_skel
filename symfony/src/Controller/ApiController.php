@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\IssueStatus;
 use Monolog\Level;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,7 +24,6 @@ class ApiController extends AbstractController {
 
         $time_entity_activity_support = 10; // Support
         $time_entity_hours = 0.25;
-        $issue_status_inProgress = 2; // In Progress
 
         // Update the passed in ticket status to in progress and add a comment that the Code Review Complete
 
@@ -32,7 +32,7 @@ class ApiController extends AbstractController {
 
         $issue_data = [
             'issue' => [
-                'status_id' => $issue_status_inProgress, // In Progress
+                'status_id' => IssueStatus::STATUS_IN_PROGRESS,
                 'custom_fields' => [[
                     'id' => 3,
                     'value' => $this->getParameter('app.redmine_cr_user_name')
@@ -83,6 +83,38 @@ class ApiController extends AbstractController {
         $url .= 'issues/' . $id . '/edit';
         $logger->debug('redirecting to ' . $url);
         return new RedirectResponse($url);
+    }
+
+    #[Route('/release/{id}', name: 'released')]
+    public function release(string $id, HttpClientInterface $client, LoggerInterface $logger) {
+
+        $id = (int)$id;
+        $url = $this->getParameter('app.redmine_url');
+        $url .= "issues/${id}.json";
+        $issue_data = [
+            'issue' => [
+                'status_id' => IssueStatus::STATUS_CLOSED,
+                'notes' => 'Released'
+            ]
+        ];
+
+        $logger->log(Level::Debug, 'url constructed: ' . $url, $issue_data);
+        try {
+            $response = $client->request('PUT', $url, [
+                'headers' => [
+                    'X-Redmine-API-Key' => $this->getParameter('app.redmine_api_token')
+                ],
+                'body' => $issue_data
+            ]);
+            $response->getContent(false);
+        } catch (TransportExceptionInterface $e) {
+            return new JsonResponse($e->getTrace(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        $url = $this->getParameter('app.redmine_url');
+        $url .= 'issues/' . $id . '/edit';
+        $logger->debug('redirecting to ' . $url);
+        return new RedirectResponse($url);
+
     }
 
 }

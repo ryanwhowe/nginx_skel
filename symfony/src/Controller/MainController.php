@@ -19,6 +19,11 @@ class MainController extends AbstractController {
         return $this->render('main/codeReview.html.twig', $this->baseResponse());
     }
 
+    #[Route('/releaseHold', name: 'releaseHold')]
+    public function releaseHold(): Response {
+        return $this->render('main/releaseHold.html.twig', $this->baseResponse());
+    }
+
     #[Route('/new', name: 'new')]
     public function new(): Response {
         return $this->render('main/new.html.twig', $this->baseResponse());
