@@ -59,7 +59,7 @@
         async: true,
         method: "GET",
         url: REDMINE_API_URL + "/issues.json",
-        data: { 'status_id': "13" },
+        data: { 'status_id': REDMINE_STATUS['STATUS_RELEASE_HOLD'] },
         crossDomain: true,
         dataType: 'json',
     }).done(function(data){

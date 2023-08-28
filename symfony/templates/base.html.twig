@@ -40,6 +40,8 @@
     var REDMINE_CR_USER_NAME = '{{ redmine_cr_user_name }}';
     var REDMINE_CR_USER_ID = {{ redmine_user_id }};
 
+    var REDMINE_STATUS = {{ redmine_statuses|json_encode|raw }};
+
     var approved_count = 0;
     var open_count = 0;
     var cr_count = 0;
@@ -62,7 +64,7 @@
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
             data: {
-                status_id: '9',
+                status_id: REDMINE_STATUS['STATUS_CODE_REVIEW'],
                 limit: 100
             },
             success: function (data) {
@@ -88,7 +90,7 @@
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
             data: {
-                status_id: 10,
+                status_id: REDMINE_STATUS['STATUS_APPROVED'],
                 limit: 100
             },
             success: function (data) {
@@ -106,7 +108,7 @@
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
             data: {
-                status_id: '2',
+                status_id: REDMINE_STATUS['STATUS_ASSIGNED'],
                 limit: 100
             },
             success: function (data) {
@@ -125,7 +127,7 @@
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
             data: {
-                status_id: '13',
+                status_id: REDMINE_STATUS['STATUS_RELEASE_HOLD'],
                 limit: 100
             },
             success: function (data) {
@@ -167,7 +169,7 @@
             async: true,
             method: "GET",
             url: REDMINE_API_URL + "/issues.json",
-            data: { 'status_id': 14, 'limit': 100, 'assigned_to_id': REDMINE_CR_USER_ID },
+            data: { 'status_id': REDMINE_STATUS['STATUS_BACKLOG'], 'limit': 100, 'assigned_to_id': REDMINE_CR_USER_ID },
             crossDomain: true,
             dataType: 'json',
         });

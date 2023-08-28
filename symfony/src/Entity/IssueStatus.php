@@ -4,7 +4,7 @@ namespace App\Entity;
 
 class IssueStatus {
 
-    const STATUS_BUSINESS_REVIEW =  1;  // previously STATUS_NEW
+    const STATUS_BUSINESS_REVIEW = 1;   // previously STATUS_NEW
     const STATUS_ASSIGNED =  2;         // previously STATUS_IN_PROGRESS
     const STATUS_QA_REVIEW =  4;        // previously STATUS_FEEDBACK
     const STATUS_CLOSED =  5;           // (closed)

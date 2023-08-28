@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\IssueStatus;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -44,7 +45,20 @@ class MainController extends AbstractController {
             'redmine_proxy_url' => $this->generateUrl('app_utility_redmine', ['data' => '']),
             'redmine_url' => $this->getParameter('app.redmine_url'),
             'redmine_user_id' => $this->getParameter('app.redmine_user_id'),
-            'redmine_cr_user_name' => $this->getParameter('app.redmine_cr_user_name')
+            'redmine_cr_user_name' => $this->getParameter('app.redmine_cr_user_name'),
+            'redmine_statuses' => [
+                'STATUS_BUSINESS_REVIEW' => IssueStatus::STATUS_BUSINESS_REVIEW,
+                'STATUS_ASSIGNED' => IssueStatus::STATUS_ASSIGNED,
+                'STATUS_QA_REVIEW' => IssueStatus::STATUS_QA_REVIEW,
+                'STATUS_CLOSED' => IssueStatus::STATUS_CLOSED,
+                'STATUS_NA2' => IssueStatus::STATUS_NA2,
+                'STATUS_NA3' => IssueStatus::STATUS_NA3,
+                'STATUS_NA1' => IssueStatus::STATUS_NA1,
+                'STATUS_CODE_REVIEW' => IssueStatus::STATUS_CODE_REVIEW,
+                'STATUS_APPROVED' => IssueStatus::STATUS_APPROVED,
+                'STATUS_RELEASE_HOLD' => IssueStatus::STATUS_RELEASE_HOLD,
+                'STATUS_BACKLOG' => IssueStatus::STATUS_BACKLOG,
+            ]
         ];
     }
 }
