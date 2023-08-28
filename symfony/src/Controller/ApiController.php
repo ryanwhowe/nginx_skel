@@ -32,7 +32,7 @@ class ApiController extends AbstractController {
 
         $issue_data = [
             'issue' => [
-                'status_id' => IssueStatus::STATUS_IN_PROGRESS,
+                'status_id' => IssueStatus::STATUS_ASSIGNED,
                 'custom_fields' => [[
                     'id' => 3,
                     'value' => $this->getParameter('app.redmine_cr_user_name')
