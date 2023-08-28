@@ -36,7 +36,7 @@ class UtilityController extends AbstractController
                     'X-Redmine-API-Key' => $this->getParameter('app.redmine_api_token')
                 ]
             ]);
-            return new Response($response->getContent());
+            return new Response($response->getContent(), $response->getStatusCode(), $response->getHeaders());
         } catch (ClientExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
             return new Response($e->getTraceAsString());
         }

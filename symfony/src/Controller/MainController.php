@@ -24,14 +24,19 @@ class MainController extends AbstractController {
         return $this->render('main/releaseHold.html.twig', $this->baseResponse());
     }
 
-    #[Route('/new', name: 'new')]
+    #[Route('/approved', name: 'approved')]
     public function new(): Response {
-        return $this->render('main/new.html.twig', $this->baseResponse());
+        return $this->render('main/approved.html.twig', $this->baseResponse());
     }
 
     #[Route('/tasks', name: 'tasks')]
     public function tasks(): Response {
         return $this->render('main/tasks.html.twig', $this->baseResponse());
+    }
+
+    #[Route('/personal', name: 'personal')]
+    public function personal(): Response {
+        return $this->render('main/personal.html.twig', $this->baseResponse());
     }
 
     protected function baseResponse(): array {

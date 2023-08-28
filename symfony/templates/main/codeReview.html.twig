@@ -38,7 +38,7 @@
 {% endblock %}
 
 {% block javascript %}
-
+<script type="text/javascript">
     let REDMINE_URL = '{{ redmine_url }}';
     let REDMINE_USER_ID = {{ redmine_user_id }};
 
@@ -122,4 +122,5 @@
     dataType: 'json',
 });
 }
+</script>
 {% endblock %}
