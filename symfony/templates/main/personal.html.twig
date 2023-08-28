@@ -7,7 +7,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.5/datatables.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js" crossorigin="anonymous"></script>{% endblock %}
 
-{% block title %}Open Tasks{% endblock %}
+{% block title %}Personal Tasks{% endblock %}
 {% block body %}
     <div class="container-fluid">
         <div class="row">
@@ -19,7 +19,7 @@
                         <th>Entered</th>
                         <th>Assigned To</th>
                         <th>Ticket</th>
-                        <th>Priority</th>
+                        <th>Status</th>
                         <th>Project</th>
                         <th>Title</th>
                     </tr>
@@ -66,44 +66,39 @@
         pullIssues();
     });
 
-    function pullIssues(){
-    $.ajax({
-        cache: false,
-        async: true,
-        method: "GET",
-        url: REDMINE_API_URL + "/issues.json",
-        data: { 'status_id': 2, 'limit': 100 },
-        crossDomain: true,
-        dataType: 'json',
-    }).done(function(data){
-        let issue_table = $('#issues').DataTable();
-        issue_table.clear();
-        let count = 0;
-        $.each(data['issues'], function(i, issue){
-            count = count + 1;
-            let createdDate = new Date(issue['created_on']);
-            let assigned = '';
-            try { assigned = issue['assigned_to']['name'].split(' ')[0]; }
-            catch (err) { assigned = 'N/A'; }
-            issue_table.row.add($([
-                '<tr>',
-                '<td>' + createdDate.getTime() + '</td>',
-                '<td>' + formatDate(createdDate)  + '</td>',
-                '<td>' + assigned + '</td>',
-                '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a></td>',
-                '<td>' + issue['priority']['name'] + '</td>',
-                '<td>' + issue['project']['name'] + '</td>',
-                '<td>' + issue['subject'] + '</td>',
-                '</tr>',
-            ].join('\r\n')));
-            issue_table.columns.adjust().draw();
+    function pullIssues() {
+        $.when(getOpenIssues(), getBacklogIssues()).then(function (data1, data2) {
+            let data = [...data1[0]['issues'], ...data2[0]['issues']];
+            let issue_table = $('#issues').DataTable();
+            issue_table.clear();
+            let count = 0;
+            $.each(data, function (i, issue) {
+                count = count + 1;
+                let createdDate = new Date(issue['created_on']);
+                let assigned = '';
+                try {
+                    assigned = issue['assigned_to']['name'].split(' ')[0];
+                } catch (err) {
+                    assigned = 'N/A';
+                }
+                issue_table.row.add($([
+                    '<tr>',
+                    '<td>' + createdDate.getTime() + '</td>',
+                    '<td>' + formatDate(createdDate) + '</td>',
+                    '<td>' + assigned + '</td>',
+                    '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">' + issue['id'] + '</a></td>',
+                    '<td>' + issue['status']['name'] + '</td>',
+                    '<td>' + issue['project']['name'] + '</td>',
+                    '<td>' + issue['subject'] + '</td>',
+                    '</tr>',
+                ].join('\r\n')));
+                issue_table.columns.adjust().draw();
+            });
+            updateTitle(count);
+            $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&fg=000000&max=99&number[]=' + count);
+            setTimeout(pullIssues, 90 * 1000);
         });
-        updateTitle(count);
-        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&fg=000000&max=99&number[]=' + count);
-        setTimeout(pullIssues, 90 * 1000);
-    });
-
-}
+    }
 
     function formatDate(dateObject){
         let time = dateObject.toLocaleTimeString().split(' ')[0];

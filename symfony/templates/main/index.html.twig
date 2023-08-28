@@ -55,6 +55,7 @@
 {% endblock %}
 
 {% block javascript %}
+<script type="text/javascript">
     let the_day = new Date();
 
     let REDMINE_URL = '{{ redmine_url }}';
@@ -84,7 +85,7 @@
     });
 
     function updateIcon() {
-        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&number[]=' + new_count + '&number[]=' + cr_count + '&number[]=' + r_count);
+        $('#favicon').attr('href', '{{ path('app_utility_favicon') }}?bg={{ icon_color }}&number[]=' + p_count + '&number[]=' + cr_count + '&number[]=' + r_count);
     }
 
     function getDays(theDate) {
@@ -117,4 +118,5 @@
             $('#' + day + '_card').timecard('updateDate', date.toISOString().slice(0,10));
         });
     }
+</script>
 {% endblock %}

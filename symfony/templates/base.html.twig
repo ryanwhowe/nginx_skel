@@ -22,7 +22,12 @@
         <div class="col">{% set currentPath = path(app.request.attributes.get('_route')) %}
             <a class="btn btn-primary{% if path('app_main_index') == currentPath %} disabled{% endif %}" href="{{ path('app_main_index') }}">Time</a>
             <a class="btn btn-secondary{% if path('app_main_tasks') == currentPath %} disabled{% endif %}" href="{{ path('app_main_tasks') }}" id="taskMonitor">Open Tasks</a>
-            <a class="btn btn-secondary{% if path('app_main_new') == currentPath %} disabled{% endif %}" href="{{ path('app_main_new') }}" id="newMonitor">New Issues</a>
+            <a class="btn btn-secondary{% if path('app_main_approved') == currentPath %} disabled{% endif %}" href="{{ path('app_main_approved') }}" id="approvedMonitor">Approved</a>
+        </div>
+    </div>
+    <div class="row m-2 text-center">
+        <div class="col">
+            <a class="btn btn-secondary{% if path('app_main_personal') == currentPath %} disabled{% endif %}" href="{{ path('app_main_personal') }}" id="personalMonitor">Personal</a>
             <a class="btn btn-secondary{% if path('app_main_codeReview') == currentPath %} disabled{% endif %}" href="{{ path('app_main_codeReview') }}" id="codeReview">Code Review</a>
             <a class="btn btn-secondary{% if path('app_main_releaseHold') == currentPath %} disabled{% endif %}" href="{{ path('app_main_releaseHold') }}" id="releaseHold">Release Hold</a>
         </div>
@@ -35,10 +40,11 @@
     var REDMINE_CR_USER_NAME = '{{ redmine_cr_user_name }}';
     var REDMINE_CR_USER_ID = {{ redmine_user_id }};
 
-    var new_count = 0;
+    var approved_count = 0;
     var open_count = 0;
     var cr_count = 0;
     var r_count = 0;
+    var p_count = 0;
 
     $(document).ready(function(){
         monitorTasksUpdate();
@@ -77,22 +83,22 @@
                 setTimeout(monitorTasksUpdate, 90 * 1000);
             }
         });
-        /** update new task */
+        /** update approved tasks */
         $.ajax({
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
             data: {
-                status_id: '1',
+                status_id: 10,
                 limit: 100
             },
             success: function (data) {
-                new_count = 0;
+                approved_count = 0;
 
                 $.each(data['issues'], function (i, issue) {
-                    new_count += 1;
+                    approved_count += 1;
                     return true;
                 });
-                $("#newMonitor").text('New Issues (' + new_count + ')')
+                $("#approvedMonitor").text('Approved (' + approved_count + ')')
             }
         });
         /** update open count */
@@ -114,6 +120,7 @@
                 $("#taskMonitor").text('Open Tasks (' + open_count + ')');
             }
         });
+        /** update releasehold count */
         $.ajax({
             url: REDMINE_API_URL + '/issues.json',
             dataType: 'json',
@@ -131,7 +138,40 @@
                 $("#releaseHold").text('Release Hold (' + r_count + ')');
             }
         });
+        /** update personal count */
+        $.when(getOpenIssues(), getBacklogIssues()).then(function(data1, data2){
+            let data = [...data1[0]['issues'], ...data2[0]['issues']];
+            p_count = 0;
+            $.each(data, function (i, issue) {
+                p_count += 1;
+                return true;
+            });
+            $("#personalMonitor").text('Personal (' + p_count + ')');
+        });
     }
-    {{ block('javascript') }}
+    function getOpenIssues(){
+        return $.ajax({
+            cache: false,
+            async: true,
+            method: "GET",
+            url: REDMINE_API_URL + "/issues.json",
+            data: { 'status_id': 'open', 'limit': 100, 'assigned_to_id': REDMINE_CR_USER_ID },
+            crossDomain: true,
+            dataType: 'json',
+        })
+    }
+
+    function getBacklogIssues(){
+        return $.ajax({
+            cache: false,
+            async: true,
+            method: "GET",
+            url: REDMINE_API_URL + "/issues.json",
+            data: { 'status_id': 14, 'limit': 100, 'assigned_to_id': REDMINE_CR_USER_ID },
+            crossDomain: true,
+            dataType: 'json',
+        });
+    }
 </script>
+{{ block('javascript') }}
 </html>
