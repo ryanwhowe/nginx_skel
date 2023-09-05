@@ -7,7 +7,9 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
@@ -43,7 +45,7 @@ class UtilityController extends AbstractController
     }
 
     #[Route('/favicon.php', name: 'favicon')]
-    public function favicon(Request $request, LoggerInterface $logger) {
+    public function favicon(Request $request, LoggerInterface $logger, CacheInterface $cache) {
         $max = 9;
         $max_symbol = '!';
 
@@ -80,7 +82,7 @@ class UtilityController extends AbstractController
             ]
         ];
 
-        $logger->log(Level::Debug, 'Settings', [
+        $cacheSettings = [
             'max' => $max,
             'max_symbol' => $max_symbol,
             'coords' => $settings,
@@ -97,39 +99,48 @@ class UtilityController extends AbstractController
                 'b' => $fg_b
             ],
             'input' => $numbers
-        ]);
+        ];
 
-        // base image
-        $generated_image = imagecreate(32, 32);
-        imagecolorallocate($generated_image, $bg_r, $bg_g, $bg_b);
+        $logger->log(Level::Debug, 'Settings', $cacheSettings);
+        $cacheKey = md5(json_encode($cacheSettings));
 
-        if (count($numbers)) {
-            $setting = $settings[count($numbers)];
-            $text_color = imagecolorallocate($generated_image, $fg_r, $fg_g, $fg_b);
-            foreach ($numbers as $index => $number) {
-                if(1 === count($numbers) && $number > 9) {
-                    $logger->debug('Overriding x coordinates');
-                    $setting[$index]['x'] = 2;
+        $cacheData = $cache->getItem($cacheKey);
+
+        if(!$cacheData->isHit()) {
+
+            // base image
+            $generated_image = imagecreate(32, 32);
+            imagecolorallocate($generated_image, $bg_r, $bg_g, $bg_b);
+
+            if (count($numbers)) {
+                $setting = $settings[count($numbers)];
+                $text_color = imagecolorallocate($generated_image, $fg_r, $fg_g, $fg_b);
+                foreach ($numbers as $index => $number) {
+                    if (1 === count($numbers) && $number > 9) {
+                        $logger->debug('Overriding x coordinates');
+                        $setting[$index]['x'] = 2;
+                    }
+                    imagefttext(
+                        $generated_image,
+                        $setting[$index]['size'],
+                        0,
+                        $setting[$index]['x'],
+                        $setting[$index]['y'],
+                        $text_color,
+                        $this->getParameter('kernel.project_dir') . '/resources/font/ARIBL0.ttf',
+                        $number
+                    );
                 }
-                imagefttext(
-                    $generated_image,
-                    $setting[$index]['size'],
-                    0,
-                    $setting[$index]['x'],
-                    $setting[$index]['y'],
-                    $text_color,
-                    $this->getParameter('kernel.project_dir') . '/resources/font/ARIBL0.ttf',
-                    $number
-                );
             }
+            ob_start();
+            imagepng($generated_image);
+            $image_data = ob_get_contents();
+            ob_end_clean();
+            $cacheData->set($image_data);
+            $cache->save($cacheData);
         }
+
         // Return the actual image as a proper PNG response
-        header('Content-Type: image/png');
-        header('Cache-Control: max-age=604800, public');
-        imagepng($generated_image); // Write binary data to output stream
-
-        imagedestroy($generated_image); // Ensure memory is freed
-
-        return new Response();
+        return new StreamedResponse( function() use ($cacheData) {echo $cacheData->get();}, 200, ['Content-Type' => 'image/png', 'Cache-Control' =>'max-age=604800, public']);
     }
 }
