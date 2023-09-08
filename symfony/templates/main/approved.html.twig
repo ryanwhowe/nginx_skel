@@ -9,16 +9,16 @@
 
 {% block title %}Approved Queue{% endblock %}
 {% block body %}
-    <div class="container">
         <div class="row">
-            <div class="col">
-                <table id="issues" class="table table-bordered table-hover table-striped">
+            <div class="col table-responsive">
+                <table id="issues" class="table table-bordered table-hover table-striped" style="width: 100%;">
                     <thead>
                     <tr>
                         <th>epoch</th>
                         <th>Entered</th>
                         <th>Issue</th>
                         <th>Priority</th>
+                        <th>Importance</th>
                         <th>Project</th>
                         <th>Author</th>
                         <th>Title</th>
@@ -27,14 +27,12 @@
                     <tbody></tbody>
                     <tfoot>
                     <tr>
-                        <td colspan="7">Redmine&COPY;</td>
+                        <td colspan="8">Redmine&COPY;</td>
                     </tr>
                     </tfoot>
                 </table>
             </div>
         </div>
-    </div>
-
 
 {% endblock %}
 
@@ -77,6 +75,11 @@
         let count = 0;
         $.each(data['issues'], function(i, issue){
             count = count + 1;
+            const custom = issue['custom_fields'];
+            let importance = '?';
+            for (let t = 0; t < custom.length; t++){
+                if(custom[t]['id'] === 7) importance = custom[t]['value'];
+            }
             let createdDate = new Date(issue['created_on']);
             issue_table.row.add($([
                 '<tr>',
@@ -84,6 +87,7 @@
                 '<td>' + formatDate(createdDate)  + '</td>',
                 '<td class="text-center"><a class="link-primary" href="' + REDMINE_URL + 'issues/' + issue['id'] + '" target="_blank">'+ issue['id'] + '</a></td>',
                 '<td>' + issue['priority']['name'] + '</td>',
+                '<td>' + importance + '</td>',
                 '<td>' + issue['project']['name'] + '</td>',
                 '<td>' + issue['author']['name'].split(' ')[0] + '</td>',
                 '<td>' + issue['subject'] + '</td>',

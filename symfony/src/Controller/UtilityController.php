@@ -52,9 +52,13 @@ class UtilityController extends AbstractController
         /* we can only deal with at most 4 values */
         $numbers = array_slice($request->query->all('number'), 0, 4);
         $max_symbol = $request->query->get('max_symbol', $max_symbol);
+
         /* only allow an override on the max if we are doing a single number */
         if(1 === count($numbers)) $max = $request->query->get('max', $max);
-        array_walk($numbers, function(&$number) use ($max, $max_symbol){ $number = ($number <= $max) ? $number : $max_symbol; });
+        /* walk the numbers and ensure none are above the max */
+        array_walk($numbers, function(&$number) use ($max, $max_symbol){
+            $number = ($number <= $max) ? $number : $max_symbol;
+        });
 
         $background = $request->query->get('bg', '194514');
         $foreground = $request->query->get('fg', 'e6e6e6');
@@ -108,10 +112,11 @@ class UtilityController extends AbstractController
 
         if(!$cacheData->isHit()) {
 
-            // base image
+            /* base background image */
             $generated_image = imagecreate(32, 32);
             imagecolorallocate($generated_image, $bg_r, $bg_g, $bg_b);
 
+            /* only add numbers in if there are numbers to be added in */
             if (count($numbers)) {
                 $setting = $settings[count($numbers)];
                 $text_color = imagecolorallocate($generated_image, $fg_r, $fg_g, $fg_b);
@@ -132,10 +137,18 @@ class UtilityController extends AbstractController
                     );
                 }
             }
+
+            /*
+             * imagepng() will write to std out or a file, we need to utilize the output buffer to capture the image
+             * data in order to be able to add it to the cache store.
+             *
+             * see https://www.php.net/manual/en/ref.outcontrol.php
+             */
             ob_start();
             imagepng($generated_image);
             $image_data = ob_get_contents();
             ob_end_clean();
+
             $cacheData->set($image_data);
             $cache->save($cacheData);
         }

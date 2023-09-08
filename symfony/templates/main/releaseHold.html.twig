@@ -63,7 +63,7 @@
         crossDomain: true,
         dataType: 'json',
     }).done(function(data){
-        console.log('issue count: ' + data['issues'].length)
+        //console.log('issue count: ' + data['issues'].length)
         let issue_table = $('#issues').DataTable();
         issue_table.clear();
         let count = 0;
@@ -83,7 +83,7 @@
                 '<td>' + issue['assigned_to']['name'] + '</td>',
                 '<td>' + codereviewer + '</td>',
                 '<td>' + issue['subject'] + '</td>',
-                '<td class="text-center"><a title="Move To Closed" class="btn btn-primary btn-sm" target="_blank" href="' + '/api/release/' + issue['id'] + '"><i class="fa-solid fa-check-to-slot"></i></a></td>',
+                '<td class="text-center"><a title="Move To Closed" class="btn btn-primary btn-sm" target="_self" href="' + '/api/release/' + issue['id'] + '"><i class="fa-solid fa-check-to-slot"></i></a></td>',
                 '</tr>',
             ].join('\r\n')));
             issue_table.columns.adjust().draw();

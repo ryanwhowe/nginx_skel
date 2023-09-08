@@ -16,4 +16,19 @@ class IssueStatus {
     const STATUS_RELEASE_HOLD = 13;     //
     const STATUS_BACKLOG = 14;          // (closed)
 
+    public static function getMappings(): array {
+        return [
+            'STATUS_BUSINESS_REVIEW' => IssueStatus::STATUS_BUSINESS_REVIEW,
+            'STATUS_ASSIGNED' => IssueStatus::STATUS_ASSIGNED,
+            'STATUS_QA_REVIEW' => IssueStatus::STATUS_QA_REVIEW,
+            'STATUS_CLOSED' => IssueStatus::STATUS_CLOSED,
+            'STATUS_NA2' => IssueStatus::STATUS_NA2,
+            'STATUS_NA3' => IssueStatus::STATUS_NA3,
+            'STATUS_NA1' => IssueStatus::STATUS_NA1,
+            'STATUS_CODE_REVIEW' => IssueStatus::STATUS_CODE_REVIEW,
+            'STATUS_APPROVED' => IssueStatus::STATUS_APPROVED,
+            'STATUS_RELEASE_HOLD' => IssueStatus::STATUS_RELEASE_HOLD,
+            'STATUS_BACKLOG' => IssueStatus::STATUS_BACKLOG,
+        ];
+    }
 }

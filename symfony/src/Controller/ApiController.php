@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Flash;
 use App\Entity\IssueStatus;
 use Monolog\Level;
 use Psr\Log\LoggerInterface;
@@ -17,7 +18,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class ApiController extends AbstractController {
 
     #[Route('/codeReview/{id}/{type}', name: 'codeReviewComplete')]
-    public function codeReview(string $id, string $type, HttpClientInterface $client, LoggerInterface $logger) {
+    public function codeReview(string $id, string $type, HttpClientInterface $client, LoggerInterface $logger): RedirectResponse|JsonResponse {
 
         $type = (int)$type;
         $id = (int)$id;
@@ -86,7 +87,7 @@ class ApiController extends AbstractController {
     }
 
     #[Route('/release/{id}', name: 'released')]
-    public function release(string $id, HttpClientInterface $client, LoggerInterface $logger) {
+    public function release(string $id, HttpClientInterface $client, LoggerInterface $logger): RedirectResponse|JsonResponse {
 
         $id = (int)$id;
         $url = $this->getParameter('app.redmine_url');
@@ -110,10 +111,8 @@ class ApiController extends AbstractController {
         } catch (TransportExceptionInterface $e) {
             return new JsonResponse($e->getTrace(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        $url = $this->getParameter('app.redmine_url');
-        $url .= 'issues/' . $id . '/edit';
-        $logger->debug('redirecting to ' . $url);
-        return new RedirectResponse($url);
+        $this->addFlash(Flash::ALERT_SUCCESS, "Issue:$id has been set to Closed");
+        return $this->redirectToRoute('app_main_releaseHold');
 
     }
 
